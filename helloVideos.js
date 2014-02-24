@@ -107,6 +107,9 @@ function sessionUpdateListener(isAlive) {
   appendMessage(message);
   if (!isAlive) {
     session = null;
+    document.getElementById("casticon").src = 'images/cast_icon_idle.png'; 
+    var playpauseresume = document.getElementById("playpauseresume");
+    playpauseresume.innerHTML = 'Play';
   }
 };
 
@@ -154,6 +157,7 @@ function onRequestSessionSuccess(e) {
   appendMessage("session success: " + e.sessionId);
   session = e;
   document.getElementById("casticon").src = 'images/cast_icon_active.png'; 
+  session.addUpdateListener(sessionUpdateListener.bind(this));  
 }
 
 /**
