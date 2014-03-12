@@ -140,6 +140,16 @@ function selectMedia(m) {
 }
 
 /**
+ * enter a media URL 
+ * @param {string} m An media URL
+ */
+function setMyMediaURL(e) {
+  if( e.value ) {
+    currentMediaURL = e.value;
+  }
+}
+
+/**
  * launch app and request session
  */
 function launchApp() {
@@ -179,7 +189,7 @@ function stopApp() {
  * load media
  * @param {string} i An index for media
  */
-function loadMedia(i) {
+function loadMedia() {
   if (!session) {
     console.log("no session");
     appendMessage("no session");
@@ -190,19 +200,19 @@ function loadMedia(i) {
   var mediaInfo = new chrome.cast.media.MediaInfo(currentMediaURL);
   mediaInfo.contentType = 'video/mp4';
   var request = new chrome.cast.media.LoadRequest(mediaInfo);
-  request.autoplay = false;
+  request.autoplay = true;
   request.currentTime = 0;
   
-  var payload = {
-    "title:" : mediaTitles[i],
-    "thumb" : mediaThumbs[i]
-  };
+  //var payload = {
+  //  "title:" : mediaTitles[i],
+  //  "thumb" : mediaThumbs[i]
+  //};
 
-  var json = {
-    "payload" : payload
-  };
+  //var json = {
+  //  "payload" : payload
+  //};
 
-  request.customData = json;
+  //request.customData = json;
 
   session.loadMedia(request,
     onMediaDiscovered.bind(this, 'loadMedia'),
