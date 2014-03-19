@@ -27,6 +27,7 @@ var mediaThumbs = [
            'images/google-io-2011.jpg'];
 var currentMediaURL = mediaURLs[0];
 
+var timer = null;
 
 /**
  * Call initialization
@@ -110,6 +111,9 @@ function sessionUpdateListener(isAlive) {
     document.getElementById("casticon").src = 'images/cast_icon_idle.png'; 
     var playpauseresume = document.getElementById("playpauseresume");
     playpauseresume.innerHTML = 'Play';
+    if( timer ) {
+      clearInterval(timer);
+    }
   }
 };
 
@@ -156,6 +160,9 @@ function launchApp() {
   console.log("launching app...");
   appendMessage("launching app...");
   chrome.cast.requestSession(onRequestSessionSuccess, onLaunchError);
+  if( timer ) {
+    clearInterval(timer);
+  }
 }
 
 /**
@@ -183,6 +190,9 @@ function onLaunchError() {
  */
 function stopApp() {
   session.stop(onStopAppSuccess, onError);
+  if( timer ) {
+    clearInterval(timer);
+  }
 }
 
 /**
@@ -200,7 +210,7 @@ function loadMedia() {
   var mediaInfo = new chrome.cast.media.MediaInfo(currentMediaURL);
   mediaInfo.contentType = 'video/mp4';
   var request = new chrome.cast.media.LoadRequest(mediaInfo);
-  request.autoplay = true;
+  request.autoplay = false;
   request.currentTime = 0;
   
   //var payload = {
@@ -256,11 +266,34 @@ function onMediaStatusUpdate(isAlive) {
 }
 
 /**
+ * Updates the progress bar shown for each media item.
+ */
+function updateCurrentTime() {
+  if (!session || !currentMediaSession) {
+    return;
+  }
+
+  if (currentMediaSession.media && currentMediaSession.media.duration != null) {
+    document.getElementById("progress").value = parseInt(100 * currentMediaSession.getEstimatedTime() / currentMediaSession.media.duration);
+  }
+  else {
+    document.getElementById("progress").value = 0;
+    if( timer ) {
+      clearInterval(timer);
+    }
+  }
+};
+
+/**
  * play media
  */
 function playMedia() {
   if( !currentMediaSession ) 
     return;
+
+  if( timer ) {
+    clearInterval(timer);
+  }
 
   var playpauseresume = document.getElementById("playpauseresume");
   if( playpauseresume.innerHTML == 'Play' ) {
@@ -268,8 +301,8 @@ function playMedia() {
       mediaCommandSuccessCallback.bind(this,"playing started for " + currentMediaSession.sessionId),
       onError);
       playpauseresume.innerHTML = 'Pause';
-      //currentMediaSession.addListener(onMediaStatusUpdate);
       appendMessage("play started");
+      timer = setInterval(updateCurrentTime.bind(this), 1000);
   }
   else {
     if( playpauseresume.innerHTML == 'Pause' ) {
@@ -286,6 +319,7 @@ function playMedia() {
           onError);
         playpauseresume.innerHTML = 'Pause';
         appendMessage("resumed");
+        timer = setInterval(updateCurrentTime.bind(this), 1000);
       }
     }
   }
@@ -304,6 +338,9 @@ function stopMedia() {
   var playpauseresume = document.getElementById("playpauseresume");
   playpauseresume.innerHTML = 'Play';
   appendMessage("media stopped");
+  if( timer ) {
+    clearInterval(timer);
+  }
 }
 
 /**
