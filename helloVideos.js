@@ -92,10 +92,8 @@ function sessionListener(e) {
   if (session.media.length != 0) {
     appendMessage(
         'Found ' + session.media.length + ' existing media sessions.');
-    onMediaDiscovered('onRequestSessionSuccess_', session.media[0]);
+    onMediaDiscovered('sessionListener', session.media[0]);
   }
-  session.addMediaListener(
-      onMediaDiscovered.bind(this, 'addMediaListener'));
   session.addUpdateListener(sessionUpdateListener.bind(this));  
 }
 
@@ -175,6 +173,9 @@ function onRequestSessionSuccess(e) {
   session = e;
   document.getElementById("casticon").src = 'images/cast_icon_active.png'; 
   session.addUpdateListener(sessionUpdateListener.bind(this));  
+  if (session.media.length != 0) {
+    onMediaDiscovered('onRequestSession', session.media[0]);
+  }
 }
 
 /**
@@ -242,6 +243,9 @@ function onMediaDiscovered(how, mediaSession) {
   mediaCurrentTime = currentMediaSession.currentTime;
   playpauseresume.innerHTML = 'Play';
   document.getElementById("casticon").src = 'images/cast_icon_active.png'; 
+  if( !timer && currentMediaSession.playerState == 'PLAYING' ) {
+    timer = setInterval(updateCurrentTime.bind(this), 1000);
+  }
 }
 
 /**
@@ -261,6 +265,8 @@ function onMediaError(e) {
 function onMediaStatusUpdate(isAlive) {
   if( progressFlag ) {
     document.getElementById("progress").value = parseInt(100 * currentMediaSession.currentTime / currentMediaSession.media.duration);
+    document.getElementById("progress_tick").innerHTML = currentMediaSession.currentTime;
+    document.getElementById("duration").innerHTML = currentMediaSession.media.duration;
   }
   document.getElementById("playerstate").innerHTML = currentMediaSession.playerState;
 }
@@ -274,10 +280,13 @@ function updateCurrentTime() {
   }
 
   if (currentMediaSession.media && currentMediaSession.media.duration != null) {
-    document.getElementById("progress").value = parseInt(100 * currentMediaSession.getEstimatedTime() / currentMediaSession.media.duration);
+    var cTime = currentMediaSession.getEstimatedTime();
+    document.getElementById("progress").value = parseInt(100 * cTime / currentMediaSession.media.duration);
+    document.getElementById("progress_tick").innerHTML = cTime;
   }
   else {
     document.getElementById("progress").value = 0;
+    document.getElementById("progress_tick").innerHTML = 0;
     if( timer ) {
       clearInterval(timer);
     }
