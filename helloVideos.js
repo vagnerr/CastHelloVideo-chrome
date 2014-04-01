@@ -206,21 +206,37 @@ function stopApp() {
 }
 
 /**
+ * load media specified by custom URL
+ */
+function loadCustomMedia() {
+  var customMediaURL = document.getElementById('customMediaURL').value;
+  if( customMediaURL.length > 0 ) {
+    loadMedia(customMediaURL);
+  }
+}
+
+/**
  * load media
  * @param {string} i An index for media
  */
-function loadMedia() {
+function loadMedia(mediaURL) {
   if (!session) {
     console.log("no session");
     appendMessage("no session");
     return;
   }
-  console.log("loading..." + currentMediaURL);
-  appendMessage("loading..." + currentMediaURL);
-  var mediaInfo = new chrome.cast.media.MediaInfo(currentMediaURL);
+
+  if( mediaURL ) {
+    var mediaInfo = new chrome.cast.media.MediaInfo(mediaURL);
+  }
+  else {
+    console.log("loading..." + currentMediaURL);
+    appendMessage("loading..." + currentMediaURL);
+    var mediaInfo = new chrome.cast.media.MediaInfo(currentMediaURL);
+  }
   mediaInfo.contentType = 'video/mp4';
   var request = new chrome.cast.media.LoadRequest(mediaInfo);
-  request.autoplay = false;
+  request.autoplay = true;
   request.currentTime = 0;
   
   //var payload = {
