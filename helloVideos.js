@@ -7,6 +7,10 @@ var CAST_API_INITIALIZATION_DELAY = 1000;
  **/
 var PROGRESS_BAR_UPDATE_DELAY = 1000;
 /**
+ * Session idle time out in miliseconds
+ **/
+var SESSION_IDLE_TIMEOUT = 300000;
+/**
  * Media source root URL
  **/
 var MEDIA_SOURCE_ROOT =
@@ -27,6 +31,7 @@ var currentVolume = 0.5;
 var progressFlag = 1;
 var mediaCurrentTime = 0;
 var session = null;
+var storedSession = null;
 var mediaURLs = [
     'http://commondatastorage.googleapis.com/gtv-videos-bucket/big_buck_bunny_1080p.mp4',
     'http://commondatastorage.googleapis.com/gtv-videos-bucket/ED_1280.mp4',
@@ -96,6 +101,17 @@ function initializeCastApi() {
  */
 function onInitSuccess() {
   appendMessage('init success');
+
+  // check if a session ID is saved into localStorage
+  storedSession = JSON.parse(localStorage.getItem('storedSession'));
+  if (storedSession) {
+    var dateString = storedSession.timestamp;
+    var now = new Date().getTime();
+
+    if (now - dateString < SESSION_IDLE_TIMEOUT) {
+      document.getElementById('joinsessionbyid').style.display = 'block';
+    }
+  }
 }
 
 /**
@@ -133,6 +149,7 @@ function sessionListener(e) {
   console.log('New session ID: ' + e.sessionId);
   appendMessage('New session ID:' + e.sessionId);
   session = e;
+  document.getElementById('casticon').src = CAST_ICON_THUMB_ACTIVE;
   if (session.media.length != 0) {
     appendMessage(
         'Found ' + session.media.length + ' existing media sessions.');
@@ -141,6 +158,10 @@ function sessionListener(e) {
   session.addMediaListener(
     onMediaDiscovered.bind(this, 'addMediaListener'));
   session.addUpdateListener(sessionUpdateListener.bind(this));
+  // disable join by session id when auto join already
+  if (storedSession) {
+    document.getElementById('joinsessionbyid').style.display = 'none';
+  }
 }
 
 /**
@@ -214,6 +235,7 @@ function launchApp() {
 function onRequestSessionSuccess(e) {
   console.log('session success: ' + e.sessionId);
   appendMessage('session success: ' + e.sessionId);
+  saveSessionID(e.sessionId);
   session = e;
   document.getElementById('casticon').src = CAST_ICON_THUMB_ACTIVE;
   session.addUpdateListener(sessionUpdateListener.bind(this));
@@ -231,6 +253,30 @@ function onRequestSessionSuccess(e) {
 function onLaunchError() {
   console.log('launch error');
   appendMessage('launch error');
+}
+
+/**
+ * save session ID into localStorage for sharing
+ * @param {string} sessionId A string for session ID
+ */
+function saveSessionID(sessionId) {
+  // Check browser support of localStorage
+  if (typeof(Storage) != 'undefined') {
+    // Store sessionId and timestamp into an object
+    var object = {id: sessionId, timestamp: new Date().getTime()};
+    localStorage.setItem('storedSession', JSON.stringify(object));
+  }
+}
+
+/**
+ * join session by a given session ID
+ */
+function joinSessionBySessionId() {
+  if (storedSession) {
+    appendMessage(
+        'Found stored session id: ' + storedSession.id);
+    chrome.cast.requestSessionById(storedSession.id);
+  }
 }
 
 /**
