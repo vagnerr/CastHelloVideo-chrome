@@ -244,7 +244,6 @@ function onRequestSessionSuccess(e) {
   }
   session.addMediaListener(
     onMediaDiscovered.bind(this, 'addMediaListener'));
-  session.addUpdateListener(sessionUpdateListener.bind(this));
 }
 
 /**
