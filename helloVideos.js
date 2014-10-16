@@ -439,6 +439,36 @@ function seekMedia(pos) {
 }
 
 /**
+ * seek media +/- time index
+ * @param {Number} pos A number to indicate number of seconds to seek by -ve = rewind
+ */
+function seekMediaTime(pos) {
+  console.log('Seeking ' + currentMedia.sessionId + ':' +
+    currentMedia.mediaSessionId + ' by ' + pos + " seconds");
+  progressFlag = 0;
+  var request = new chrome.cast.media.SeekRequest();
+  request.currentTime = currentMedia.currentTime + pos;
+  currentMedia.seek(request,
+    onSeekSuccess.bind(this, 'media seek done'),
+    onError);
+}
+/**
+ * seek media absolute time index
+ * @param {Number} pos A number to indicate number of seconds to seek to
+ */
+function seekMediaATime(pos) {
+  console.log('Seeking ' + currentMedia.sessionId + ':' +
+    currentMedia.mediaSessionId + ' to ' + pos + " seconds");
+  progressFlag = 0;
+  var request = new chrome.cast.media.SeekRequest();
+  request.currentTime = pos;
+  currentMedia.seek(request,
+    onSeekSuccess.bind(this, 'media seek done'),
+    onError);
+}
+
+
+/**
  * callback on success for media commands
  * @param {string} info A message string
  * @param {Object} e A non-null media object
